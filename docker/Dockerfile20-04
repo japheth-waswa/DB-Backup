@@ -1,0 +1,34 @@
+# Use Ubuntu as the base image
+FROM ubuntu:20.04
+
+# Set non-interactive mode to avoid timezone selection prompt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install required dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    zip \
+    unzip \
+    maven \
+    build-essential \
+    zlib1g-dev \
+    libstdc++-10-dev \
+    && apt-get clean
+
+# Install SDKMAN for Java installation
+RUN curl -s "https://get.sdkman.io" | bash
+
+# Use SHELL to allow sourcing for SDKMAN
+SHELL ["/bin/bash", "-c"]
+
+# Install GraalVM 23 using SDKMAN
+RUN source "/root/.sdkman/bin/sdkman-init.sh" && \
+    sdk install java 23-graal && \
+    sdk default java 23-graal
+
+# Set Maven properties for native image builds
+ENV JAVA_HOME="/root/.sdkman/candidates/java/current"
+ENV PATH="$JAVA_HOME/bin:$PATH"
+
+# Set the working directory
+WORKDIR /app
