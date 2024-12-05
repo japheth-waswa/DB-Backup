@@ -166,7 +166,7 @@ public final class DataSourceFactory {
 1. PostgresQL
 2. MongoDB
 
-## Native Image Build with [GraalVM](https://www.graalvm.org/)
+## Native Image Build with [GraalVM](https://www.graalvm.org/){:target="_blank"}
 1. To generate image for your current host `mvn package -Pnative -DskipTests`
 2. If on Mac or window, you can generate native image for ubuntu using `docker` as described below
    1. Ubuntu 20.04
