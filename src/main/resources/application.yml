@@ -1,0 +1,20 @@
+#mvn package -Pnative -DskipTests
+
+###docker build -f ./docker/Dockerfile20-04 -t graalvm-native-ubuntu-20-04 .
+###docker run -v $(pwd):/app -w /app graalvm-native-ubuntu-20-04 bash -c "mvn package -Pnative -DskipTests"
+
+###docker build -f ./docker/Dockerfile22-04 -t graalvm-native-ubuntu-22-04 .
+###docker run -v $(pwd):/app -w /app graalvm-native-ubuntu-22-04 bash -c "mvn package -Pnative -DskipTests"
+server:
+  port: ${BACKUP_APP_PORT:4934}
+
+spring:
+  application:
+    name: AppBackup
+  threads:
+    virtual:
+      enabled: true
+
+logging:
+  level:
+    ROOT: INFO
