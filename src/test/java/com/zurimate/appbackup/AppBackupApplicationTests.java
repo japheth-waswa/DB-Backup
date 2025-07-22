@@ -17,14 +17,13 @@ class AppBackupApplicationTests {
     @Autowired
     private BackupContext backupContext;
 
-    private DBConfig mysqlDbConfig = TestDBConfigs.getMysqlConfig();
+    private static final DBConfig mysqlDbConfig = TestDBConfigs.getMysqlConfig();
     private String mysqlDestinationRelative = "test-backup-rel";
     private String mysqlDestinationAbsolute = "/Users/japhethelijah/dev/java/apps/AppBackup/test-backup-abs";
     private List<String> mysqlOtherDirsToBackup = List.of("/Users/japhethelijah/Downloads/AppBackup", "/Users/japhethelijah/Downloads/smis");
 
     @BeforeAll
     static void init() {
-
     }
 
     @Test
