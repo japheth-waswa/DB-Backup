@@ -1,0 +1,34 @@
+services:
+  backup_app_postgres:
+    image: postgres:17.5
+    container_name: backup_app_postgres
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file:
+      - .env
+    ports:
+      - "${BACKUP_APP_POSTGRES_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${BACKUP_APP_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${BACKUP_APP_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${BACKUP_APP_POSTGRES_DB}
+    shm_size: 128mb
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${BACKUP_APP_POSTGRES_USER}", "-d", "${BACKUP_APP_POSTGRES_DB}" ]
+      interval: 10s
+      retries: 5
+      timeout: 5s
+      start_period: 30s
+    volumes:
+      - "./volumes/postgres:/var/lib/postgresql/data"
+    networks:
+      - app_backup_network
+
+networks:
+  app_backup_network:
+    driver: bridge
+
+#  BACKUP_APP_POSTGRES_PORT=2530
+#  BACKUP_APP_POSTGRES_USER=Ivp4ASvUqKt
+#  BACKUP_APP_POSTGRES_PASSWORD=J32QAHo8zsBL
+#  BACKUP_APP_POSTGRES_DB=backup_app
