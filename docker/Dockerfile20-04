@@ -21,10 +21,10 @@ RUN curl -s "https://get.sdkman.io" | bash
 # Use SHELL to allow sourcing for SDKMAN
 SHELL ["/bin/bash", "-c"]
 
-# Install GraalVM 23 using SDKMAN
+# Install GraalVM 24 using SDKMAN
 RUN source "/root/.sdkman/bin/sdkman-init.sh" && \
-    sdk install java 23-graal && \
-    sdk default java 23-graal
+    sdk install java 24-graal && \
+    sdk default java 24-graal
 
 # Set Maven properties for native image builds
 ENV JAVA_HOME="/root/.sdkman/candidates/java/current"

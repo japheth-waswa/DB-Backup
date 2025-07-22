@@ -175,3 +175,33 @@ public final class DataSourceFactory {
    2. Ubuntu 22.04
       1. `docker build -f ./docker/Dockerfile22-04 -t graalvm-native-ubuntu-22-04 .`
       2. `docker run -v $(pwd):/app -w /app graalvm-native-ubuntu-22-04 bash -c "mvn package -Pnative -DskipTests"`
+3. **Copy** the native image to production host e.g `cp target/AppBackup ~/App/AppBackup`
+4. Setup **systemd**
+```bash
+sudo touch /etc/systemd/system/AppBackup.service
+sudo nano /etc/systemd/system/AppBackup.service
+```
+
+Paste this script in above AppBackup.service
+```bash
+[Unit]
+Description=App Backup
+After=network.target
+
+[Service]
+ExecStart=/home/johndoe/App/AppBackup
+WorkingDirectory=/home/johndoe/App
+EnvironmentFile=/home/johndoe/App/.env
+Restart=always
+User=johndoe
+
+[Install]
+WantedBy=multi-user.target
+```
+Only include `EnvironmentFile=/home/johndoe/App/.env` if applicable otherwise ignore it.
+
+Then allow the AppBackup app in **systemd**
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start AppBackup
+sudo systemctl enable AppBackup
