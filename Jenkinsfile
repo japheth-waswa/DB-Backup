@@ -24,7 +24,7 @@ pipeline {
                         echo "JAVA_HOME=$JAVA_HOME"
                         java -version
                         mvn -version
-                        mvn -B -DskipTests verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                        mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                           -Dsonar.projectKey=japheth-waswa_DB-Backup_AZgt3hfv_mqXGzXgC5qx \
                           -Dsonar.java.source=24 \
                           -Dsonar.github.repository=japheth-waswa/DB-Backup \
