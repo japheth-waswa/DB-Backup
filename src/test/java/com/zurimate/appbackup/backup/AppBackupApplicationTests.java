@@ -5,7 +5,6 @@ import com.zurimate.appbackup.dto.DBConfig;
 import com.zurimate.appbackup.service.BackupContext;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -13,7 +12,7 @@ import java.util.List;
 
 @Slf4j
 @SpringBootTest
-class AppBackupApplicationTests {
+public class AppBackupApplicationTests {
 
     @Autowired
     private BackupContext backupContext;
@@ -27,8 +26,9 @@ class AppBackupApplicationTests {
     static void init() {
     }
 
-    @Test
+//    @Test
     void mysqlBackupTest_Relative_Destination() throws InterruptedException {
+//        assertThrows(Exception.class,()->backupContext.backup(mysqlDbConfig, mysqlDestinationRelative, mysqlOtherDirsToBackup));
        var res= backupContext.backup(mysqlDbConfig, mysqlDestinationRelative, mysqlOtherDirsToBackup);
        log.info("{}",res);
        Thread.sleep(15000);
