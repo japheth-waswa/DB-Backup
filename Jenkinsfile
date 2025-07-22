@@ -7,7 +7,7 @@ pipeline {
     environment {
         SONAR_TOKEN = credentials('SONAR_TOKEN')
         GITHUB_TOKEN = credentials('GITHUB_TOKEN')
-        SONAR_HOST_URL = 'https://60b80221b360.ngrok-free.app'
+        SONAR_HOST_URL = 'http://sonarqube:9000'
     }
     stages {
         stage('Checkout') {
