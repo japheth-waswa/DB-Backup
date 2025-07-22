@@ -20,13 +20,17 @@ pipeline {
         stage('Build and Analyze') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-                        -Dsonar.projectKey=japheth-waswa_DB-Backup_AZgt3hfv_mqXGzXgC5qx \
-                        -Dsonar.java.source=24 \
-                        -Dsonar.github.repository=japheth-waswa/DB-Backup \
-                        -Dsonar.github.oauth=$GITHUB_TOKEN
-                    '''
+                    withEnv(["JAVA_HOME=${tool 'JDK24'}", "PATH+JAVA=${tool 'JDK24'}/bin"]) {
+                        sh '''
+                            echo "JAVA_HOME=$JAVA_HOME"
+                            java -version
+                            mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                              -Dsonar.projectKey=japheth-waswa_DB-Backup_AZgt3hfv_mqXGzXgC5qx \
+                              -Dsonar.java.source=24 \
+                              -Dsonar.github.repository=japheth-waswa/DB-Backup \
+                              -Dsonar.github.oauth=$GITHUB_TOKEN
+                        '''
+                    }
                 }
             }
         }
