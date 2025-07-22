@@ -12,7 +12,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/japheth-waswa/DB-Backup.git', credentialsId: 'GITHUB_TOKEN'
+                git url: 'https://github.com/japheth-waswa/DB-Backup.git',
+                    credentialsId: 'GITHUB_TOKEN',
+                    branch: 'main'
             }
         }
         stage('Build and Analyze') {
