@@ -26,8 +26,11 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
-                        echo "JAVA_HOME=$JAVA_HOME"
+                        export JAVA_HOME=/var/jenkins_home/tools/hudson.model.JDK/JDK24
+                        export PATH=$JAVA_HOME/bin:$PATH
+                        echo "Using JAVA_HOME=$JAVA_HOME"
                         java -version
+                        mvn -version
                         mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                           -Dsonar.projectKey=japheth-waswa_DB-Backup_AZgt3hfv_mqXGzXgC5qx \
                           -Dsonar.java.source=24 \
