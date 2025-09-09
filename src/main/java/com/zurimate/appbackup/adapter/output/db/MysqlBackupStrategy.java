@@ -1,12 +1,11 @@
-package com.zurimate.appbackup.adapter.output;
+package com.zurimate.appbackup.adapter.output.db;
 
 import com.zurimate.appbackup.dto.BackupDestination;
 import com.zurimate.appbackup.dto.DBConfig;
 import com.zurimate.appbackup.ports.output.BackupStrategy;
-import com.zurimate.appbackup.utils.DBType;
-import com.zurimate.appbackup.utils.DataSourceFactory;
-import com.zurimate.appbackup.utils.DirType;
-import com.zurimate.appbackup.utils.Helpers;
+import com.zurimate.appbackup.service.cloud.CloudConfig;
+import com.zurimate.appbackup.utils.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -24,14 +23,16 @@ import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
+@RequiredArgsConstructor
 @Slf4j
-@Component(DBType.DBTypeStrategyConstants.MYSQL_STRATEGY)
+@Component(DBTypeStrategyConstants.MYSQL_STRATEGY)
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class MysqlBackupStrategy implements BackupStrategy {
 
     private DataSource dataSource;
     private Map<DirType, Path> tempDirs, destinationDirs;
     private DBConfig dbConfig;
+    private final DbFilesToCloud dbFilesToCloud;
 
     @Override
     public DBType dbType() {
@@ -39,7 +40,8 @@ class MysqlBackupStrategy implements BackupStrategy {
     }
 
     @Override
-    public BackupDestination backup(DBConfig databaseConfig, String destination, List<String> otherDirsToBackup) {
+    public BackupDestination backup(DBConfig databaseConfig, String destination, List<String> otherDirsToBackup,
+                                    CloudType cloudType, String cloudDestinationDir, CloudConfig cloudConfig) {
         dbConfig = databaseConfig;
         log.info("MysqlBackup received request with dbConfig: {}, destination:{}, otherDirsToBackup:{}", dbConfig, destination, otherDirsToBackup);
 
@@ -62,18 +64,25 @@ class MysqlBackupStrategy implements BackupStrategy {
         Path othersZipFileDestination = Helpers.destinationFile(destinationDirs.get(DirType.OTHER), othersZipFile);
 
         //initiate all processes in a new virtual thread (BG JOB)
-        Thread.startVirtualThread(() -> _backup(dbZipFile, othersZipFile, otherDirsToBackup));
+        Thread.startVirtualThread(() -> _backup(dbZipFile, othersZipFile, otherDirsToBackup,
+                dbZipFileDestination, othersZipFileDestination,
+                cloudType, cloudDestinationDir, cloudConfig));
 
         return new BackupDestination(dbZipFileDestination.toAbsolutePath().toString(), othersZipFileDestination.toAbsolutePath().toString());
     }
 
-    private void _backup(Path dbZipFile, Path othersZipFile, List<String> otherDirsToBackup) {
+    private void _backup(Path dbZipFile, Path othersZipFile, List<String> otherDirsToBackup,
+                         Path dbZipFileDestination, Path othersZipFileDestination,
+                         CloudType cloudType, String cloudDestinationDir, CloudConfig cloudConfig) {
         //db backup
         backupDB(dbZipFile);
         //other backup
         Helpers.backupOtherDirs(otherDirsToBackup, tempDirs.get(DirType.OTHER), destinationDirs.get(DirType.OTHER), othersZipFile);
         //delete temp dirs
         Helpers.deleteDirectory(tempDirs.get(DirType.DB).getParent());
+
+        // upload to cloud
+        dbFilesToCloud.uploadFilesToCloud(dbZipFileDestination, othersZipFileDestination, cloudType, cloudDestinationDir, cloudConfig);
     }
 
     private boolean createDirs() {

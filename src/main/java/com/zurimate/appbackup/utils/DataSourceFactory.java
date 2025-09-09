@@ -13,7 +13,8 @@ import java.util.Objects;
 public final class DataSourceFactory {
     private static final Map<DBType, TriFunction<String, Integer, String, String>> jdbcUrlMap = Map.of(
 //            DBType.MYSQL, (host, port, dbName) -> "jdbc:mysql://%s:%s/%s?zeroDateTimeBehavior=convertToNull".formatted(host,port,dbName)
-            DBType.MYSQL, "jdbc:mysql://%s:%s/%s?zeroDateTimeBehavior=convertToNull"::formatted
+            DBType.MYSQL, "jdbc:mysql://%s:%s/%s?zeroDateTimeBehavior=convertToNull"::formatted,
+            DBType.POSTGRESQL, "jdbc:postgresql://%s:%s/%s"::formatted
     );
 
     private DataSourceFactory() {

@@ -42,5 +42,7 @@ temp*/
 test-backup*/
 src/test/java/com/zurimate/AppBackup/TestDBConfigs.java
 httpie.txt
+*key.json
+volumes/
 
 

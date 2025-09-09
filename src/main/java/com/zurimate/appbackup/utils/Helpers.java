@@ -1,7 +1,9 @@
 package com.zurimate.appbackup.utils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zurimate.appbackup.dto.ApiResponse;
 import com.zurimate.appbackup.ports.output.BackupStrategy;
+import com.zurimate.appbackup.ports.output.CloudUploadStrategy;
 import jakarta.validation.ConstraintViolationException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +14,8 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +31,8 @@ public final class Helpers {
     private static final String DB_DIR = "db";
     private static final String OTHER_DIR = "other";
     private static final String ERROR_MESSAGE_PREFIX = "GlobalExceptionHandler: ";
+    static DateTimeFormatter fileDirNameDateTimeformatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm");
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private Helpers() {
     }
@@ -49,13 +55,22 @@ public final class Helpers {
     }
 
 
-    public static BackupStrategy createNewBackupStrategyInstance(ApplicationContext applicationContext, DBType dbType) {
+    public static BackupStrategy createNewCloudUploadStrategyInstance(ApplicationContext applicationContext, DBType dbType) {
         Map<DBType, Function<ApplicationContext, BackupStrategy>> backupInstances = new HashMap<>();
         Arrays.stream(DBType.values())
                 .forEach(dbTypeEnum -> backupInstances
                         .put(dbTypeEnum,
-                                (appContext) -> appContext.getBean(dbTypeEnum.toString(), BackupStrategy.class)));
+                                appContext -> appContext.getBean(dbTypeEnum.toString(), BackupStrategy.class)));
         return backupInstances.get(dbType).apply(applicationContext);
+    }
+
+    public static CloudUploadStrategy createNewCloudUploadStrategyInstance(ApplicationContext applicationContext, CloudType cloudType) {
+        Map<CloudType, Function<ApplicationContext, CloudUploadStrategy>> backupInstances = new HashMap<>();
+        Arrays.stream(CloudType.values())
+                .forEach(cloudTypeEnum -> backupInstances
+                        .put(cloudTypeEnum,
+                                appContext -> appContext.getBean(cloudTypeEnum.toString(), CloudUploadStrategy.class)));
+        return backupInstances.get(cloudType).apply(applicationContext);
     }
 
     public static Map<DirType, Path> finalBackupDestinationDir(String destination) {
@@ -260,6 +275,11 @@ public final class Helpers {
 
         //copy file
         Helpers.copyFile(destinationDir, zipFile);
+    }
+
+    public static String parseFileNameWithDateTime(){
+        ZonedDateTime nowGmt = ZonedDateTime.now(ZoneId.of("GMT"));
+        return "%s-gmt".formatted(nowGmt.format(fileDirNameDateTimeformatter));
     }
 
 }

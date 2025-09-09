@@ -2,6 +2,8 @@ package com.zurimate.appbackup.ports.output;
 
 import com.zurimate.appbackup.dto.BackupDestination;
 import com.zurimate.appbackup.dto.DBConfig;
+import com.zurimate.appbackup.service.cloud.CloudConfig;
+import com.zurimate.appbackup.utils.CloudType;
 import com.zurimate.appbackup.utils.DBType;
 
 import java.util.List;
@@ -9,5 +11,6 @@ import java.util.List;
 public interface BackupStrategy {
     DBType dbType();
 
-    BackupDestination backup(DBConfig databaseConfig, String destination, List<String> otherDirsToBackup);
+    BackupDestination backup(DBConfig databaseConfig, String destination, List<String> otherDirsToBackup,
+                             CloudType cloudType, String cloudDestinationDir, CloudConfig cloudConfig);
 }

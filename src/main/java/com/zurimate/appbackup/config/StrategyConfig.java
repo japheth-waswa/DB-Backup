@@ -1,6 +1,8 @@
 package com.zurimate.appbackup.config;
 
 import com.zurimate.appbackup.service.BackupStrategyFactory;
+import com.zurimate.appbackup.service.cloud.CloudUploadStrategyFactory;
+import com.zurimate.appbackup.utils.CloudType;
 import com.zurimate.appbackup.utils.DBType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
@@ -22,5 +24,13 @@ class StrategyConfig {
         Arrays.stream(DBType.values())
                 .forEach(dbType -> backupStrategyFactoryMap.put(dbType, new BackupStrategyFactory(dbType, applicationContext)));
         return backupStrategyFactoryMap;
+    }
+
+    @Bean
+    public Map<CloudType, CloudUploadStrategyFactory> cloudUploadType() {
+        Map<CloudType, CloudUploadStrategyFactory> cloudUploadStrategyFactoryMap = new EnumMap<>(CloudType.class);
+        Arrays.stream(CloudType.values())
+                .forEach(cloudType -> cloudUploadStrategyFactoryMap.put(cloudType, new CloudUploadStrategyFactory(cloudType, applicationContext)));
+        return cloudUploadStrategyFactoryMap;
     }
 }

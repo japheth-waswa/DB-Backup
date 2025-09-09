@@ -10,7 +10,8 @@ Strategies are based on:
 
 ```java
 public enum DBType {
- MYSQL(DBTypeStrategyConstants.MYSQL_STRATEGY);
+   MYSQL(DBTypeStrategyConstants.MYSQL_STRATEGY),
+   POSTGRESQL(DBTypeStrategyConstants.POSTGRESQL_STRATEGY);
 
  private final String strategyName;
 
@@ -23,12 +24,16 @@ public enum DBType {
   return this.strategyName;
  }
 
- public interface DBTypeStrategyConstants {
-  String MYSQL_STRATEGY = "mysqlStrategy";
- }
 }
 ```
 
+```java
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class DBTypeStrategyConstants {
+   public static final String MYSQL_STRATEGY = "mysqlStrategy";
+   public static final String POSTGRESQL_STRATEGY = "postgresqlStrategy";
+}
+```
 ```java
 public interface BackupStrategy {
  DBType dbType();
@@ -161,10 +166,43 @@ public final class DataSourceFactory {
 
 ## Production ready DBs
 1. Mysql
+2. PostgresQL
 
-## Upcoming support
-1. PostgresQL
-2. MongoDB
+## Production ready Cloud Storage
+1. <a href="https://www.graalvm.org" target="_blank">BackBlaze</a>
+
+```java
+public enum CloudType {
+   BACK_BLAZE
+}
+```
+
+
+## Register DB Backup
+```shell
+http POST :4934/backup \
+    schedulerType=EVERY_6_HOURS \
+    destination="/destination/dir" \
+    otherDirsToBackup:='["/dir/to/backup"]' \
+    cloudType=BACK_BLAZE \
+    cloudDestinationDir="cloud-dir" \
+    dbConfig:='{
+        "dbType": "POSTGRESQL",
+        "host": "***",
+        "port": ***,
+        "username": "***",
+        "password": "***",
+        "dbName": "***",
+        "tableBatchesOf": 5
+    }' \
+    blazeCloudConfig:='{
+        "keyId": "***",
+        "keyName": "***",
+        "applicationKey": "***",
+        "bucketName": "***"
+    }'
+```
+
 
 ## Native Image Build with <a href="https://www.graalvm.org" target="_blank">GraalVM</a>
 1. To generate image for your current host `mvn package -Pnative -DskipTests`
@@ -205,3 +243,10 @@ Then allow the AppBackup app in **systemd**
 sudo systemctl daemon-reload
 sudo systemctl start AppBackup
 sudo systemctl enable AppBackup
+```
+
+If you experience missing classes or errors in the final executable,
+run below to get the reachability metadata including the missing classes/resources
+1. ``mvn clean install -DskipTests``
+2. ``java -agentlib:native-image-agent=config-output-dir=graalvm-config -jar target/AppBackup-1.0.0.jar``
+3. Then Run ``http GET :4934/init`` to generate reachability metadata

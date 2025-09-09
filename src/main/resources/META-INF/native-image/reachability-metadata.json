@@ -649,7 +649,19 @@
       ]
     },
     {
-      "type": "com.zurimate.appbackup.adapter.output.MysqlBackupStrategy",
+      "type": "com.zurimate.appbackup.adapter.output.cloud.BackBlazeUploadStrategy",
+      "allDeclaredFields": true
+    },
+    {
+      "type": "com.zurimate.appbackup.adapter.output.db.DbFilesToCloud",
+      "allDeclaredFields": true
+    },
+    {
+      "type": "com.zurimate.appbackup.adapter.output.db.MysqlBackupStrategy",
+      "allDeclaredFields": true
+    },
+    {
+      "type": "com.zurimate.appbackup.adapter.output.db.PostgresqlBackupStrategy",
       "allDeclaredFields": true
     },
     {
@@ -723,11 +735,19 @@
       "allDeclaredFields": true
     },
     {
+      "type": "com.zurimate.appbackup.dto.cloud.BackBlazeConfig",
+      "allDeclaredFields": true
+    },
+    {
       "type": "com.zurimate.appbackup.ports.input.BackupSchedulerService",
       "allDeclaredFields": true
     },
     {
       "type": "com.zurimate.appbackup.ports.output.BackupStrategy",
+      "allDeclaredFields": true
+    },
+    {
+      "type": "com.zurimate.appbackup.ports.output.CloudUploadStrategy",
       "allDeclaredFields": true
     },
     {
@@ -740,6 +760,21 @@
     },
     {
       "type": "com.zurimate.appbackup.service.BackupStrategyFactory",
+      "allDeclaredFields": true
+    },
+    {
+      "type": "com.zurimate.appbackup.service.cloud.CloudConfig"
+    },
+    {
+      "type": "com.zurimate.appbackup.service.cloud.CloudUploadContext",
+      "allDeclaredFields": true
+    },
+    {
+      "type": "com.zurimate.appbackup.service.cloud.CloudUploadStrategyFactory",
+      "allDeclaredFields": true
+    },
+    {
+      "type": "com.zurimate.appbackup.utils.CloudType",
       "allDeclaredFields": true
     },
     {
@@ -904,7 +939,19 @@
       "type": "jakarta.persistence.PersistenceProperty"
     },
     {
+      "type": "jakarta.persistence.PostLoad"
+    },
+    {
+      "type": "jakarta.persistence.PrePersist"
+    },
+    {
+      "type": "jakarta.persistence.PreUpdate"
+    },
+    {
       "type": "jakarta.persistence.Table"
+    },
+    {
+      "type": "jakarta.persistence.Transient"
     },
     {
       "type": "jakarta.persistence.UniqueConstraint"
@@ -1375,6 +1422,27 @@
       "type": "org.apache.commons.dbcp2.BasicDataSource"
     },
     {
+      "type": "org.apache.commons.logging.LogFactory"
+    },
+    {
+      "type": "org.apache.commons.logging.LogFactoryService",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.apache.commons.logging.impl.WeakHashtable",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
       "type": "org.apache.coyote.UpgradeProtocol"
     },
     {
@@ -1701,6 +1769,9 @@
     {
       "type": "org.springframework.aop.support.AbstractPointcutAdvisor",
       "allDeclaredFields": true
+    },
+    {
+      "type": "org.springframework.aot.generate.Generated"
     },
     {
       "type": "org.springframework.aot.hint.annotation.Reflective"
@@ -5976,6 +6047,9 @@
       ]
     },
     {
+      "type": "org.springframework.web.bind.annotation.GetMapping"
+    },
+    {
       "type": "org.springframework.web.bind.annotation.Mapping"
     },
     {
@@ -6459,6 +6533,9 @@
       "glob": "META-INF/services/javax.xml.transform.TransformerFactory"
     },
     {
+      "glob": "META-INF/services/org.apache.commons.logging.LogFactory"
+    },
+    {
       "glob": "META-INF/services/org.apache.juli.logging.Log"
     },
     {
@@ -6525,7 +6602,16 @@
       "glob": "com/zurimate/appbackup/adapter/input/BackupSchedulerAdapter.class"
     },
     {
-      "glob": "com/zurimate/appbackup/adapter/output/MysqlBackupStrategy.class"
+      "glob": "com/zurimate/appbackup/adapter/output/cloud/BackBlazeUploadStrategy.class"
+    },
+    {
+      "glob": "com/zurimate/appbackup/adapter/output/db/DbFilesToCloud.class"
+    },
+    {
+      "glob": "com/zurimate/appbackup/adapter/output/db/MysqlBackupStrategy.class"
+    },
+    {
+      "glob": "com/zurimate/appbackup/adapter/output/db/PostgresqlBackupStrategy.class"
     },
     {
       "glob": "com/zurimate/appbackup/config/GlobalExceptionHandler.class"
@@ -6543,10 +6629,22 @@
       "glob": "com/zurimate/appbackup/ports/output/BackupStrategy.class"
     },
     {
+      "glob": "com/zurimate/appbackup/ports/output/CloudUploadStrategy.class"
+    },
+    {
       "glob": "com/zurimate/appbackup/scheduler/Scheduler.class"
     },
     {
       "glob": "com/zurimate/appbackup/service/BackupContext.class"
+    },
+    {
+      "glob": "com/zurimate/appbackup/service/cloud/CloudConfig.class"
+    },
+    {
+      "glob": "com/zurimate/appbackup/service/cloud/CloudUploadContext.class"
+    },
+    {
+      "glob": "commons-logging.properties"
     },
     {
       "glob": "config"
@@ -7171,6 +7269,9 @@
     },
     {
       "glob": "org/springframework/context/ApplicationContextAware.class"
+    },
+    {
+      "glob": "org/springframework/context/ApplicationContextInitializer.class"
     },
     {
       "glob": "org/springframework/context/EnvironmentAware.class"

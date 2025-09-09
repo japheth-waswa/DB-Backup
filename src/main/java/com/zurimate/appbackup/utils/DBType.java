@@ -1,7 +1,8 @@
 package com.zurimate.appbackup.utils;
 
 public enum DBType {
-    MYSQL(DBTypeStrategyConstants.MYSQL_STRATEGY);
+    MYSQL(DBTypeStrategyConstants.MYSQL_STRATEGY),
+    POSTGRESQL(DBTypeStrategyConstants.POSTGRESQL_STRATEGY);
 
     private final String strategyName;
 
@@ -14,7 +15,7 @@ public enum DBType {
         return this.strategyName;
     }
 
-    public interface DBTypeStrategyConstants {
-        String MYSQL_STRATEGY = "mysqlStrategy";
-    }
+//    public interface DBTypeStrategyConstants {
+//        String MYSQL_STRATEGY = "mysqlStrategy";
+//    }
 }

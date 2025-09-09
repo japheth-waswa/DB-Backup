@@ -1,0 +1,9 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "b2-sdk-core/version\\.txt"
+      }
+    ]
+  }
+}

@@ -2,6 +2,7 @@ package com.zurimate.appbackup.config;
 
 
 import com.zurimate.appbackup.dto.ApiResponse;
+import com.zurimate.appbackup.exception.InvalidPayloadException;
 import com.zurimate.appbackup.utils.Helpers;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,13 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ResponseBody
+    @ExceptionHandler(value = {InvalidPayloadException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    ApiResponse<Void> handleException(InvalidPayloadException exception) {
+        return Helpers.parseResponse(exception, exception.getMessage());
+    }
 
     @ResponseBody
     @ExceptionHandler(value = {ConstraintViolationException.class})

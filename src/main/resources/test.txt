@@ -1,0 +1,3 @@
+{"resources":[ {
+                  "glob": "com/zurimate/appbackup/adapter/output/cloud/BackBlazeUploadStrategy.class"
+                }]}

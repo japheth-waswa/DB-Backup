@@ -14,4 +14,6 @@ public interface BackupSchedulerService {
     void processScheduledBackup(SchedulerType schedulerType);
 
     void processScheduledBackup(List<SchedulerType> schedulerTypes);
+
+    void initiateAllBackups();
 }

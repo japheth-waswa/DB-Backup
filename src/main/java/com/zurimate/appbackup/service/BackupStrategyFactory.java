@@ -11,7 +11,7 @@ public class BackupStrategyFactory {
     private final DBType dbType;
     private final ApplicationContext applicationContext;
 
-    public BackupStrategy createInstance(){
-        return Helpers.createNewBackupStrategyInstance(applicationContext,dbType);
+    public BackupStrategy createInstance() {
+        return Helpers.createNewCloudUploadStrategyInstance(applicationContext, dbType);
     }
 }

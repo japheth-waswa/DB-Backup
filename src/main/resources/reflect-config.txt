@@ -1,0 +1,268 @@
+[
+  {
+    "name": "java.util.UUID",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "java.util.UUID[]",
+    "unsafeAllocated": true
+  },
+  {
+    "name": "org.hibernate.bytecode.internal.bytebuddy.BytecodeProviderImpl",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+  "type": "com.backblaze.b2.client.B2StorageClientWebifierImpl$Empty",
+  "allDeclaredFields": true
+},
+  {
+    "type": "com.backblaze.b2.client.structures.B2AccountAuthorization",
+    "allDeclaredFields": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "java.lang.String",
+          "java.lang.String",
+          "java.lang.String",
+          "java.lang.String",
+          "long",
+          "long",
+          "com.backblaze.b2.client.structures.B2Allowed",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2Allowed",
+    "allDeclaredFields": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "java.util.List",
+          "java.lang.String",
+          "java.lang.String",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2AuthorizationFilteredResponseField",
+    "allDeclaredFields": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "boolean",
+          "java.lang.Object"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2Bucket",
+    "allDeclaredFields": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "java.lang.String",
+          "java.lang.String",
+          "java.lang.String",
+          "java.lang.String",
+          "java.util.Map",
+          "java.util.List",
+          "java.util.List",
+          "java.util.Set",
+          "com.backblaze.b2.client.structures.B2AuthorizationFilteredResponseField",
+          "com.backblaze.b2.client.structures.B2AuthorizationFilteredResponseField",
+          "com.backblaze.b2.client.structures.B2AuthorizationFilteredResponseField",
+          "int"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2BucketDefaultRetention",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2BucketDefaultRetentionPeriod",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2BucketFileLockConfiguration",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2BucketReplicationConfiguration",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2BucketReplicationConfiguration$B2DestinationConfig",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2BucketReplicationConfiguration$B2SourceConfig",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2BucketServerSideEncryption",
+    "allDeclaredFields": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "java.lang.String",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2CorsRule",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2FileRetention",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2FileSseForResponse",
+    "allDeclaredFields": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "java.lang.String",
+          "java.lang.String",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2FileVersion",
+    "allDeclaredFields": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "java.lang.String",
+          "java.lang.String",
+          "long",
+          "java.lang.String",
+          "java.lang.String",
+          "java.lang.String",
+          "java.util.Map",
+          "java.lang.String",
+          "long",
+          "com.backblaze.b2.client.structures.B2AuthorizationFilteredResponseField",
+          "com.backblaze.b2.client.structures.B2AuthorizationFilteredResponseField",
+          "com.backblaze.b2.client.structures.B2FileSseForResponse",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2GetUploadUrlRequest",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2LifecycleRule",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2ListBucketsRequest",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2ListBucketsResponse",
+    "allDeclaredFields": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "java.util.List"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2ReplicationRule",
+    "allDeclaredFields": true
+  },
+  {
+    "type": "com.backblaze.b2.client.structures.B2UploadUrlResponse",
+    "allDeclaredFields": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "java.lang.String",
+          "java.lang.String",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "com.backblaze.b2.client.webApiHttpClient.B2StorageHttpClientFactory",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "type": "com.zurimate.appbackup.adapter.output.cloud.BackBlazeUploadStrategy",
+    "allDeclaredFields": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "type": "com.zurimate.appbackup.dto.cloud.BackBlazeConfig",
+    "allDeclaredFields": true,
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      },
+      {
+        "name": "setApplicationKey",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      },
+      {
+        "name": "setBucketName",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      },
+      {
+        "name": "setKeyId",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      },
+      {
+        "name": "setKeyName",
+        "parameterTypes": [
+          "java.lang.String"
+        ]
+      }
+    ]
+  }
+]
