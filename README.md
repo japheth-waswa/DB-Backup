@@ -1,252 +1,132 @@
-# DB & Custom directories backups (Work In Progress)
-Performs database backup and custom directories backups.
+# AppBackup
 
-## Pattern
-`Strategy pattern` is widely used to facilitate easier extension of database adapters.
+Scheduled, restorable logical backups of SQL and NoSQL databases, plus arbitrary directories.
+Every run is archived with a SHA-256 checksum, optionally shipped to Backblaze B2 and recorded
+in an audit trail you can query over the API.
 
-Each strategy implementation must have: `@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)`
+| Engine | Dump format | Restore with |
+|---|---|---|
+| PostgreSQL | SQL files (pre-data, one file per table, post-data) | `psql` |
+| MySQL / MariaDB | SQL files | `mysql` |
+| Microsoft SQL Server | SQL files with `GO` batches | `sqlcmd` |
+| Oracle | SQL files for SQL*Plus | `sqlplus` / SQLcl |
+| MongoDB | `mongodump` layout (`.bson` + `.metadata.json`) | `mongorestore` |
+| Redis | `RESTORE ... ABSTTL REPLACE` commands in RESP | `redis-cli --pipe` |
 
-Strategies are based on:
+Every engine has an integration test that dumps a deliberately awkward database, restores it
+with the engine's own tool and compares the data row by row (see `src/test`).
 
-```java
-public enum DBType {
-   MYSQL(DBTypeStrategyConstants.MYSQL_STRATEGY),
-   POSTGRESQL(DBTypeStrategyConstants.POSTGRESQL_STRATEGY);
+## How a run works
 
- private final String strategyName;
+1. The job is queued. At most `BACKUP_APP_MAX_CONCURRENT_BACKUPS` jobs run at once; a job never
+   overlaps with itself (the second run is recorded as `SKIPPED`).
+2. The destination is checked for free space (`BACKUP_APP_MIN_FREE_DISK_MB`).
+3. The database is dumped by a coordinator connection plus up to
+   `BACKUP_APP_MAX_CONNECTIONS_PER_BACKUP - 1` workers. Rows are **streamed**, never paged with
+   `OFFSET`, and every connection is closed when the run ends, whatever happens.
+4. The dump is zipped, checksummed and moved into the destination atomically
+   (`db-<timestamp>.zip` + `db-<timestamp>.zip.sha256`).
+5. The archive is uploaded (retried on transient errors), then optional retention runs.
+6. The outcome is stored in `backup_runs`: `SUCCESS`, `PARTIAL` (some tables failed, listed in
+   the message), `FAILED` or `SKIPPED`.
 
- DBType(String strategyName) {
-  this.strategyName = strategyName;
- }
+### Consistency
 
- @Override
- public String toString() {
-  return this.strategyName;
- }
+| Engine | Point in time |
+|---|---|
+| PostgreSQL | One exported snapshot shared by all workers |
+| Oracle | `AS OF SCN` for every table when the user may read the SCN (`GRANT EXECUTE ON DBMS_FLASHBACK`), otherwise per table |
+| SQL Server | Snapshot isolation per connection when `ALLOW_SNAPSHOT_ISOLATION` is on, otherwise `READ COMMITTED` |
+| MySQL / MariaDB | Consistent snapshot per connection; use `tableBatchesOf: 1` for one snapshot overall |
+| MongoDB / Redis | Per collection / per key, like `mongodump` without `--oplog` and `SCAN` |
 
-}
-```
+## Configuration
 
-```java
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class DBTypeStrategyConstants {
-   public static final String MYSQL_STRATEGY = "mysqlStrategy";
-   public static final String POSTGRESQL_STRATEGY = "postgresqlStrategy";
-}
-```
-```java
-public interface BackupStrategy {
- DBType dbType();
+All settings come from environment variables; see `.env-docker.example`.
 
- void backup(DBConfig databaseConfig, String destination, List<String> otherDirsToBackup);
-}
-```
+| Variable | Default | Purpose |
+|---|---|---|
+| `BACKUP_APP_API_KEY` | – | **Required.** Sent in the `X-API-Key` header. Without it the API answers 503. |
+| `BACKUP_APP_ENCRYPTION_KEY` | – | Base64, 32 bytes. Encrypts stored passwords and cloud keys (AES-256-GCM). Keep a copy safe. |
+| `BACKUP_APP_MAX_CONCURRENT_BACKUPS` | 2 | Jobs running at the same time |
+| `BACKUP_APP_MAX_CONNECTIONS_PER_BACKUP` | 3 | Connections one backup may hold on the target |
+| `BACKUP_APP_RUN_ON_STARTUP` | true | Run every job once when the service starts |
+| `BACKUP_APP_MIN_FREE_DISK_MB` | 512 | Refuse to start a backup below this |
+| `BACKUP_APP_RETENTION_KEEP_LAST` | 0 | Local archives kept per job (0 keeps all) |
+| `BACKUP_APP_CLOUD_RETENTION_DAYS` | 0 | Delete remote archives older than this (0 never deletes) |
+| `BACKUP_APP_RUN_HISTORY_DAYS` | 90 | Run history kept |
 
-Creates new `BackupStrategy` implementation from the application context on demand
+Generate keys with `openssl rand -hex 32` (API key) and `openssl rand -base64 32` (encryption key).
+Existing plaintext credentials are encrypted automatically on the first start with a key.
 
-```java
-@Slf4j
-public final class Helpers {
- public static BackupStrategy createNewBackupStrategyInstance(ApplicationContext applicationContext, DBType dbType) {
-  Map<DBType, Function<ApplicationContext, BackupStrategy>> backupInstances = new HashMap<>();
-  Arrays.stream(DBType.values())
-          .forEach(dbTypeEnum -> backupInstances
-                  .put(dbTypeEnum,
-                          (appContext) -> appContext.getBean(dbTypeEnum.toString(), BackupStrategy.class)));
-  return backupInstances.get(dbType).apply(applicationContext);
- }
-}
-```
+## API
 
-Wrapper object for new `BackupStrategy`. Calls `createInstance` method to create a new instance.
+All endpoints except `GET /actuator/health` require `X-API-Key`.
 
-```java
-@RequiredArgsConstructor
-public class BackupStrategyFactory {
- private final DBType dbType;
- private final ApplicationContext applicationContext;
+| Method | Path | |
+|---|---|---|
+| `POST` | `/backup` | Register a job and run it now |
+| `GET` | `/backups` | List jobs (no credentials) with their last run |
+| `GET` | `/backups/{id}` | One job |
+| `GET` | `/backups/{id}/runs?limit=20` | Run history |
+| `POST` | `/backups/{id}/run` | Run a job now |
+| `DELETE` | `/backups/{id}` | Remove a job and its history; archives stay on disk |
+| `GET` | `/init` | Run every job now (kept for older scripts) |
 
- public BackupStrategy createInstance(){
-  return Helpers.createNewBackupStrategyInstance(applicationContext,dbType);
- }
-}
-```
+### Register a backup
 
-Bean to create all instances of `BackupStrategyFactory` derived from `DBType`
-
-```java
-@Configuration
-@RequiredArgsConstructor
-class StrategyConfig {
-    private final ApplicationContext applicationContext;
-
-    @Bean
-    public Map<DBType, BackupStrategyFactory> backupDataByDBType() {
-        Map<DBType, BackupStrategyFactory> backupStrategyFactoryMap = new EnumMap<>(DBType.class);
-        Arrays.stream(DBType.values())
-                .forEach(dbType -> backupStrategyFactoryMap.put(dbType, new BackupStrategyFactory(dbType, applicationContext)));
-        return backupStrategyFactoryMap;
-    }
-}
-```
-
-Loads the relevant strategy depending on `dbConfig.dbType()`
-
-```java
-@Slf4j
-@Component
-@RequiredArgsConstructor
-public class BackupContext {
-  private final Map<DBType, BackupStrategyFactory> backupDataByDBType;
- 
-  public void backup(DBConfig dbConfig, String destination, List<String> otherDirsToBackup) {
-    BackupStrategyFactory strategyFactory = backupDataByDBType.getOrDefault(dbConfig.dbType(), null);
-    if (Objects.isNull(strategyFactory)) {
-     log.error("DBType: {} does not have an existing implementation", dbConfig.dbType());
-     return;
-    }
-    //get a new instance of the strategy since each request can have different db configs
-    BackupStrategy backupStrategy = strategyFactory.createInstance();
-    backupStrategy.backup(dbConfig, destination, otherDirsToBackup);
-  }
- 
-}
-```
-`MysqlBackupStrategy` one of the implementations of the `BackupStrategy`
-
-```java
-@Slf4j
-@Component(DBType.DBTypeStrategyConstants.MYSQL_STRATEGY)
-@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-class MysqlBackupStrategy implements BackupStrategy {
-    
-  @Override
-  public DBType dbType() {
-   return DBType.MYSQL;
-  }
-  
-  @Override
-  public void backup(DBConfig databaseConfig, String destination, List<String> otherDirsToBackup) {
-      
-  }
-  
-}
-```
-
-`DataSourceFactory` Uses Functional Interfaces with custom `TriFunction`. Enables extendability of `JDBC URL` generation.
-```java
-public final class DataSourceFactory {
-    private static final Map<DBType, TriFunction<String, Integer, String, String>> jdbcUrlMap = Map.of(
-            DBType.MYSQL, (host, port, dbName) -> "jdbc:mysql://" + host + ":" + port + "/" + dbName
-    );
-
-    private DataSourceFactory() {
-    }
-
-    public static DataSource createDataSource(DBType dbType, DBConfig dbConfig) {
-        var jdbcUrlFunc = jdbcUrlMap.getOrDefault(dbType, null);
-        if (Objects.isNull(jdbcUrlFunc)) {
-            throw new RuntimeException("jdbcUrlMap does not have " + dbType);
-        }
-
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(jdbcUrlFunc.apply(Helpers.parseHost(dbConfig.host()), dbConfig.port(), dbConfig.dbName()));
-        config.setUsername(dbConfig.username());
-        config.setPassword(dbConfig.password());
-        config.setMaximumPoolSize(10);
-        config.setMinimumIdle(2);
-        config.setIdleTimeout(600000);
-        config.setMaxLifetime(1800000);
-        return new HikariDataSource(config);
-    }
-
-}
-```
-
-
-## Production ready DBs
-1. Mysql
-2. PostgresQL
-
-## Production ready Cloud Storage
-1. <a href="https://www.graalvm.org" target="_blank">BackBlaze</a>
-
-```java
-public enum CloudType {
-   BACK_BLAZE
-}
-```
-
-
-## Register DB Backup
 ```shell
-http POST :4934/backup \
+http POST :4934/backup X-API-Key:$BACKUP_APP_API_KEY \
     schedulerType=EVERY_6_HOURS \
-    destination="/destination/dir" \
-    otherDirsToBackup:='["/dir/to/backup"]' \
+    destination=/backups/shop \
+    otherDirsToBackup:='["/data/uploads"]' \
     cloudType=BACK_BLAZE \
-    cloudDestinationDir="cloud-dir" \
+    cloudDestinationDir=shop \
     dbConfig:='{
         "dbType": "POSTGRESQL",
-        "host": "***",
-        "port": ***,
+        "host": "shop_postgres",
+        "port": 5432,
         "username": "***",
         "password": "***",
-        "dbName": "***",
-        "tableBatchesOf": 5
+        "dbName": "shop",
+        "tableBatchesOf": 2
     }' \
-    blazeCloudConfig:='{
-        "keyId": "***",
-        "keyName": "***",
-        "applicationKey": "***",
-        "bucketName": "***"
-    }'
+    blazeCloudConfig:='{"keyId": "***", "keyName": "***", "applicationKey": "***", "bucketName": "***"}'
 ```
 
+`dbType` is one of `POSTGRESQL`, `MYSQL`, `MARIADB`, `ORACLE`, `MSSQL`, `MONGODB`, `REDIS`.
 
-## Native Image Build with <a href="https://www.graalvm.org" target="_blank">GraalVM</a>
-1. To generate image for your current host `mvn package -Pnative -DskipTests`
-2. If on Mac or window, you can generate native image for ubuntu using `docker` as described below
-   1. Ubuntu 20.04
-      1. `docker build -f ./docker/Dockerfile20-04 -t graalvm-native-ubuntu-20-04 .`
-      2. `docker run -v $(pwd):/app -w /app graalvm-native-ubuntu-20-04 bash -c "mvn package -Pnative -DskipTests"`
-   2. Ubuntu 22.04
-      1. `docker build -f ./docker/Dockerfile22-04 -t graalvm-native-ubuntu-22-04 .`
-      2. `docker run -v $(pwd):/app -w /app graalvm-native-ubuntu-22-04 bash -c "mvn package -Pnative -DskipTests"`
-3. **Copy** the native image to production host e.g `cp target/AppBackup ~/App/AppBackup`
-4. Setup **systemd**
-```bash
-sudo touch /etc/systemd/system/AppBackup.service
-sudo nano /etc/systemd/system/AppBackup.service
+* **Oracle**: `dbName` is the service name (e.g. `FREEPDB1`); the connecting user's schema is dumped.
+* **SQL Server**: pass driver settings in `options`, e.g. `"options": "encrypt=true;trustServerCertificate=true"`.
+* **MongoDB**: credentials are optional; `"options": "authSource=admin"`.
+* **Redis**: `dbName` is the database index (`"0"`); username/password optional (ACL / `requirepass`).
+
+`schedulerType`: `HOURLY`, `EVERY_6_HOURS`, `EVERY_12_HOURS`, `DAILY`, `EVERY_3_DAYS`,
+`EVERY_WEEK`, `EVERY_FORTNIGHT`, `MONTHLY`, `ANNUALLY` (cron, server time zone).
+
+## Restoring
+
+Every database archive contains a `MANIFEST.txt` with row counts, failures and the exact restore
+commands. Verify the archive first:
+
+```shell
+sha256sum -c db-2026-10-31-06-00-00.zip.sha256
+unzip db-2026-10-31-06-00-00.zip -d restore && cat restore/MANIFEST.txt
 ```
 
-Paste this script in above AppBackup.service
-```bash
-[Unit]
-Description=App Backup
-After=network.target
+## Build and test
 
-[Service]
-ExecStart=/home/johndoe/App/AppBackup
-WorkingDirectory=/home/johndoe/App
-EnvironmentFile=/home/johndoe/App/.env
-Restart=always
-User=johndoe
-
-[Install]
-WantedBy=multi-user.target
-```
-Only include `EnvironmentFile=/home/johndoe/App/.env` if applicable otherwise ignore it.
-
-Then allow the AppBackup app in **systemd**
-```bash
-sudo systemctl daemon-reload
-sudo systemctl start AppBackup
-sudo systemctl enable AppBackup
+```shell
+./mvnw verify                       # unit + Testcontainers tests (Docker needed, nothing else)
+docker build -f docker/Dockerfile.native-build --target export --output type=local,dest=target/native .
+cp target/native/AppBackup . && docker compose up -d --build app-backup
 ```
 
-If you experience missing classes or errors in the final executable,
-run below to get the reachability metadata including the missing classes/resources
-1. ``mvn clean install -DskipTests``
-2. ``java -agentlib:native-image-agent=config-output-dir=graalvm-config -jar target/AppBackup-1.0.0.jar``
-3. Then Run ``http GET :4934/init`` to generate reachability metadata
+Database tests use Testcontainers and are skipped automatically on machines without Docker.
+
+## Design
+
+Hexagonal layout: `adapter/input` (REST, scheduler) → `ports/input` → `service` → `ports/output`
+← `adapter/output` (database dump strategies, cloud storage). Relational engines extend
+`SqlDumpStrategy`, which owns the worker pool, file layout and error handling; a new SQL engine
+only implements a `DumpSession`. Non-relational engines implement `DatabaseDumpStrategy` directly.

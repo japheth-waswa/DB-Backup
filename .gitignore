@@ -34,7 +34,11 @@ build/
 
 
 ### custom ###
+.DS_Store
 .DS_STORE
+.env-docker
+work/
+volumes-old/
 .env
 *.env
 logs/

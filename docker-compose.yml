@@ -1,11 +1,11 @@
 services:
   backup_app_postgres:
-    image: postgres:17.5
+    image: postgres:18.3
     container_name: backup_app_postgres
     extra_hosts:
       - "host.docker.internal:host-gateway"
     env_file:
-      - .env
+      - .env-docker
     ports:
       - "${BACKUP_APP_POSTGRES_PORT}:5432"
     environment:
@@ -20,15 +20,37 @@ services:
       timeout: 5s
       start_period: 30s
     volumes:
-      - "./volumes/postgres:/var/lib/postgresql/data"
+      - "./volumes/postgres:/var/lib/postgresql"
     networks:
-      - app_backup_network
+      - zurimate-net
+
+  app-backup:
+    container_name: app-backup
+    restart: unless-stopped
+    # lets a running dump finish its current table and record the run before the container stops
+    stop_grace_period: 60s
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Prevent permission issues with mounted volumes
+#    user: "${UID:-1000}:${GID:-1000}"
+    working_dir: /app
+    env_file:
+      - .env-docker
+    ports:
+      - "4934:4934"
+    depends_on:
+      - backup_app_postgres
+    volumes:
+      - ./volumes/backup/logs:/app/logs
+      - ./volumes/backup/backups:/backups
+    networks:
+      - zurimate-net
+
+#networks:
+#  app_backup_network:
+#    driver: bridge
 
 networks:
-  app_backup_network:
-    driver: bridge
-
-#  BACKUP_APP_POSTGRES_PORT=2530
-#  BACKUP_APP_POSTGRES_USER=***REMOVED***
-#  BACKUP_APP_POSTGRES_PASSWORD=***REMOVED***
-#  BACKUP_APP_POSTGRES_DB=backup_app
+  zurimate-net:
+    external: true

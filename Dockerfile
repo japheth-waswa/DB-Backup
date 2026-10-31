@@ -1,17 +1,13 @@
-# Minimal, secure runtime
+# Runtime image for the native AppBackup executable (build it with docker/Dockerfile.native-build).
+# distroless/base ships glibc and CA certificates and nothing else: no shell, no package manager.
 FROM gcr.io/distroless/base
 
 WORKDIR /app
 
-# Copy native binary
-COPY AppBackup .
+# --chmod sets the executable bit at copy time; distroless has no shell to run chmod
+COPY --chmod=755 AppBackup /app/AppBackup
 
-# Ensure executable (important)
-# (won't fail if already executable)
-USER root
-RUN chmod +x /app/AppBackup
-
-# Drop privileges (optional but good practice)
-USER nonroot:nonroot
+# Runs as root because existing backup volumes on the hosts are root owned.
+# Switch to USER nonroot:nonroot once /backups and /app/logs are chowned to uid 65532.
 
 ENTRYPOINT ["/app/AppBackup"]

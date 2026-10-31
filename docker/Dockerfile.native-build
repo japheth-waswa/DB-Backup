@@ -1,0 +1,33 @@
+# Builds the Linux native executable without installing GraalVM locally.
+#
+#   docker build -f docker/Dockerfile.native-build --target export --output type=local,dest=target/native .
+#
+# The binary lands in target/native/AppBackup. It is built on Ubuntu 20.04 on purpose:
+# a binary links against the build host's glibc (2.31 here) and runs on that version or newer,
+# so the same file works on Ubuntu 20.04 hosts (systemd install) and the distroless/Debian 12
+# runtime image (glibc 2.36).
+FROM ubuntu:20.04 AS build
+ARG GRAALVM_VERSION=24.0.2
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl build-essential zlib1g-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${GRAALVM_VERSION}/graalvm-community-jdk-${GRAALVM_VERSION}_linux-x64_bin.tar.gz" \
+      -o /tmp/graalvm.tgz \
+ && mkdir -p /opt/graalvm && tar -xzf /tmp/graalvm.tgz -C /opt/graalvm --strip-components=1 && rm /tmp/graalvm.tgz
+ENV JAVA_HOME=/opt/graalvm
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
+WORKDIR /src
+# dependencies first so they stay cached while only sources change
+COPY .mvn .mvn
+COPY mvnw pom.xml ./
+RUN ./mvnw -B -q -Pnative dependency:go-offline || true
+
+COPY src src
+RUN ./mvnw -B -Pnative -DskipTests package
+
+FROM scratch AS export
+COPY --from=build /src/target/AppBackup /AppBackup

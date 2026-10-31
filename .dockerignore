@@ -1,0 +1,11 @@
+.git
+.idea
+target
+logs
+work
+volumes
+volumes-old
+temp-*
+test-backup*
+*.env
+.env*
