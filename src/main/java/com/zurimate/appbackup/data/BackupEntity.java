@@ -1,6 +1,7 @@
 package com.zurimate.appbackup.data;
 
 import com.zurimate.appbackup.dto.cloud.BackBlazeConfig;
+import com.zurimate.appbackup.security.EncryptedStringConverter;
 import com.zurimate.appbackup.utils.CloudType;
 import com.zurimate.appbackup.utils.DBType;
 import com.zurimate.appbackup.utils.SchedulerType;
@@ -17,6 +18,10 @@ import java.util.UUID;
 
 import static com.zurimate.appbackup.utils.Helpers.OBJECT_MAPPER;
 
+/**
+ * A registered backup job. The database password and cloud credentials are encrypted at rest
+ * (see {@link EncryptedStringConverter}) and excluded from {@code toString()}.
+ */
 @Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
@@ -49,15 +54,21 @@ public class BackupEntity {
 
     private String username;
 
+    @ToString.Exclude
+    @Convert(converter = EncryptedStringConverter.class)
     private String password;
 
     private String dbName;
 
     private int tableBatchesOf;
 
+    /** Extra driver options, e.g. authSource=admin or trustServerCertificate=true. */
+    @Column(length = 1024)
+    private String connectionOptions;
+
     private String destination;
 
-    List<String> otherDirsToBackup;
+    private List<String> otherDirsToBackup;
 
     @Convert(converter = CloudTypeConverter.class)
     @Column(columnDefinition = "VARCHAR")
@@ -66,8 +77,11 @@ public class BackupEntity {
     private String cloudDestinationDir;
 
     @Transient
+    @ToString.Exclude
     private BackBlazeConfig backBlazeConfig;
 
+    @ToString.Exclude
+    @Convert(converter = EncryptedStringConverter.class)
     @Column(columnDefinition = "TEXT")
     private String backBlazeConfigJson;
 

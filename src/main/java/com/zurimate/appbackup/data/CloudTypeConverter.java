@@ -3,6 +3,9 @@ package com.zurimate.appbackup.data;
 import com.zurimate.appbackup.utils.CloudType;
 import jakarta.persistence.AttributeConverter;
 
+/**
+ * Stores {@link CloudType} by name so renaming Java constants is an explicit, visible change.
+ */
 public class CloudTypeConverter implements AttributeConverter<CloudType, String> {
     @Override
     public String convertToDatabaseColumn(CloudType attribute) {

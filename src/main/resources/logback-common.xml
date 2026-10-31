@@ -21,9 +21,9 @@
             <!-- rollover daily -->
             <fileNamePattern>${DEV_HOME}/archived/${APP_NAME}-info.%d{yyyy-MM-dd}.%i.log
             </fileNamePattern>
-            <maxFileSize>1MB</maxFileSize>
-            <maxHistory>60</maxHistory>
-            <totalSizeCap>20GB</totalSizeCap>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>300MB</totalSizeCap>
         </rollingPolicy>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>INFO</level>
@@ -44,9 +44,9 @@
             <!-- rollover daily -->
             <fileNamePattern>${DEV_HOME}/archived/${APP_NAME}-warn.%d{yyyy-MM-dd}.%i.log
             </fileNamePattern>
-            <maxFileSize>1MB</maxFileSize>
-            <maxHistory>60</maxHistory>
-            <totalSizeCap>20GB</totalSizeCap>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>300MB</totalSizeCap>
         </rollingPolicy>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>WARN</level>
@@ -67,9 +67,9 @@
             <!-- rollover daily -->
             <fileNamePattern>${DEV_HOME}/archived/${APP_NAME}-error.%d{yyyy-MM-dd}.%i.log
             </fileNamePattern>
-            <maxFileSize>1MB</maxFileSize>
-            <maxHistory>60</maxHistory>
-            <totalSizeCap>20GB</totalSizeCap>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>300MB</totalSizeCap>
         </rollingPolicy>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
@@ -82,9 +82,9 @@
             <!-- rollover daily -->
             <fileNamePattern>${DEV_HOME}/logstash/archived/${APP_NAME}-log.%d{yyyy-MM-dd}.%i.log
             </fileNamePattern>
-            <maxFileSize>1MB</maxFileSize>
-            <maxHistory>60</maxHistory>
-            <totalSizeCap>20GB</totalSizeCap>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>300MB</totalSizeCap>
         </rollingPolicy>
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>

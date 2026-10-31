@@ -4,6 +4,9 @@ import com.zurimate.appbackup.service.cloud.CloudConfig;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+/**
+ * Backblaze B2 credentials and target bucket. The application key is never printed.
+ */
 @Builder
 @Getter
 @Setter
@@ -18,6 +21,7 @@ public class BackBlazeConfig implements CloudConfig {
     @NotBlank(message = "Back Blaze Key Name is required")
     private String keyName;
 
+    @ToString.Exclude
     @NotBlank(message = "Back Blaze Application Key is required")
     private String applicationKey;
 

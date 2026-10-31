@@ -1,21 +1,26 @@
 package com.zurimate.appbackup.utils;
 
+/**
+ * Database engines AppBackup can dump. MYSQL and MARIADB share one strategy; the distinction is kept
+ * so operators can see what they registered.
+ */
 public enum DBType {
-    MYSQL(DBTypeStrategyConstants.MYSQL_STRATEGY),
-    POSTGRESQL(DBTypeStrategyConstants.POSTGRESQL_STRATEGY);
+    POSTGRESQL(true),
+    MYSQL(true),
+    MARIADB(true),
+    ORACLE(true),
+    MSSQL(true),
+    MONGODB(false),
+    REDIS(false);
 
-    private final String strategyName;
+    private final boolean requiresCredentials;
 
-    DBType(String strategyName) {
-        this.strategyName = strategyName;
+    DBType(boolean requiresCredentials) {
+        this.requiresCredentials = requiresCredentials;
     }
 
-    @Override
-    public String toString() {
-        return this.strategyName;
+    /** SQL engines always authenticate; MongoDB and Redis may run without credentials. */
+    public boolean requiresCredentials() {
+        return requiresCredentials;
     }
-
-//    public interface DBTypeStrategyConstants {
-//        String MYSQL_STRATEGY = "mysqlStrategy";
-//    }
 }

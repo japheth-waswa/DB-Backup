@@ -1,25 +1,63 @@
 server:
   port: ${BACKUP_APP_PORT:4934}
+  shutdown: graceful
 
 spring:
   application:
     name: AppBackup
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   threads:
     virtual:
       enabled: true
   datasource:
     driver-class-name: org.postgresql.Driver
-    platform: postgres
     url: ${BACKUP_APP_JDBC_POSTGRES_URL:jdbc:postgresql://localhost:2530/backup_app}
-    username: ${BACKUP_APP_POSTGRES_USER:***REMOVED***}
-    password: ${BACKUP_APP_POSTGRES_PASSWORD:***REMOVED***}
+    username: ${BACKUP_APP_POSTGRES_USER:}
+    password: ${BACKUP_APP_POSTGRES_PASSWORD:}
+    hikari:
+      pool-name: app-backup-meta
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 10000
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  security:
+    api-key: ${BACKUP_APP_API_KEY:}
+    encryption-key: ${BACKUP_APP_ENCRYPTION_KEY:}
+  backup:
+    work-dir: ${BACKUP_APP_WORK_DIR:./work}
+    max-concurrent-backups: ${BACKUP_APP_MAX_CONCURRENT_BACKUPS:2}
+    max-connections-per-backup: ${BACKUP_APP_MAX_CONNECTIONS_PER_BACKUP:3}
+    fetch-size: 1000
+    insert-batch-rows: 500
+    connect-timeout-seconds: 15
+    run-on-startup: ${BACKUP_APP_RUN_ON_STARTUP:true}
+    min-free-disk-mb: ${BACKUP_APP_MIN_FREE_DISK_MB:512}
+    retention:
+      keep-last: ${BACKUP_APP_RETENTION_KEEP_LAST:0}
+      run-history-days: ${BACKUP_APP_RUN_HISTORY_DAYS:90}
+    cloud:
+      upload-attempts: 3
+      retry-delay-seconds: 30
+      retention-days: ${BACKUP_APP_CLOUD_RETENTION_DAYS:0}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 logging:
   level:
