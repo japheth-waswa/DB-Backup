@@ -105,7 +105,7 @@ class BackupSchedulerAdapterTest {
         DatabaseDumper none = mock(DatabaseDumper.class);
         BackupSchedulerAdapter strict = new BackupSchedulerAdapter(backups, runs, dispatcher, TestProps.with(Path.of("w"), 0, 0, 1, 0), none);
         assertThatThrownBy(() -> strict.createScheduledBackup(request(pg("u", "p"), "/b", null, null, null)))
-                .hasMessageContaining("not supported");
+                .hasMessageContaining("is not built into this AppBackup edition");
     }
 
     @Test

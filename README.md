@@ -124,6 +124,18 @@ cp target/native/AppBackup . && docker compose up -d --build app-backup
 
 Database tests use Testcontainers and are skipped automatically on machines without Docker.
 
+### Editions
+
+| Edition | Engines | How to build |
+|---|---|---|
+| slim (native default) | PostgreSQL, MySQL, MariaDB | `docker build -f docker/Dockerfile.native-build ...` or `./mvnw -Dslim package` |
+| full | adds Oracle, SQL Server, MongoDB, Redis | `docker build --build-arg EDITION=full -f docker/Dockerfile.native-build ...` or `./mvnw package` |
+
+The Oracle, SQL Server, MongoDB and Redis drivers make the native image much larger and its build far
+slower and more memory hungry, so the native build leaves them out unless asked. A slim binary refuses
+to register a job for an engine it does not include. The JVM build and the test suite always use the
+full edition.
+
 ## Design
 
 Hexagonal layout: `adapter/input` (REST, scheduler) → `ports/input` → `service` → `ports/output`

@@ -1,6 +1,12 @@
+# syntax=docker/dockerfile:1
 # Builds the Linux native executable without installing GraalVM locally.
 #
 #   docker build -f docker/Dockerfile.native-build --target export --output type=local,dest=target/native .
+#
+# EDITION=slim (default) builds PostgreSQL + MySQL/MariaDB only, which is quick and small.
+# EDITION=full adds Oracle, SQL Server, MongoDB and Redis:
+#
+#   docker build --build-arg EDITION=full -f docker/Dockerfile.native-build --target export --output type=local,dest=target/native .
 #
 # The binary lands in target/native/AppBackup. It is built on Ubuntu 20.04 on purpose:
 # a binary links against the build host's glibc (2.31 here) and runs on that version or newer,
@@ -8,6 +14,7 @@
 # runtime image (glibc 2.36).
 FROM ubuntu:20.04 AS build
 ARG GRAALVM_VERSION=24.0.2
+ARG EDITION=slim
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
@@ -21,13 +28,12 @@ ENV JAVA_HOME=/opt/graalvm
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 WORKDIR /src
-# dependencies first so they stay cached while only sources change
+# the Maven repository lives in a BuildKit cache, so a pom change does not re-download everything
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
-RUN ./mvnw -B -q -Pnative dependency:go-offline || true
-
 COPY src src
-RUN ./mvnw -B -Pnative -DskipTests package
+RUN --mount=type=cache,target=/root/.m2 \
+    EXTRA=$([ "$EDITION" = slim ] && echo -Dslim); ./mvnw -B -Pnative $EXTRA -DskipTests package
 
 FROM scratch AS export
 COPY --from=build /src/target/AppBackup /AppBackup

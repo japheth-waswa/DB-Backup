@@ -75,7 +75,7 @@ public class BackupSchedulerAdapter implements BackupSchedulerService {
     private void validate(BackupRequest request) {
         DBConfig db = request.dbConfig();
         if (!dumper.supports(db.dbType())) {
-            throw new InvalidPayloadException("Database type %s is not supported".formatted(db.dbType()));
+            throw new InvalidPayloadException("Database type %s is not built into this AppBackup edition (build without -Dslim for all engines)".formatted(db.dbType()));
         }
         if (db.dbType().requiresCredentials() && (!StringUtils.hasText(db.username()) || !StringUtils.hasText(db.password()))) {
             throw new InvalidPayloadException("username and password are required for %s".formatted(db.dbType()));

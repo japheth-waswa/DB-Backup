@@ -47,24 +47,6 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>com.oracle.database.jdbc</groupId>
-            <artifactId>ojdbc11</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>mssql-jdbc</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-sync</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-        </dependency>
-        <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
             <version>8.1</version>
@@ -197,6 +179,67 @@
     </build>
 
     <profiles>
+        <!--
+            Engine editions. By default every engine is built in (PostgreSQL, MySQL/MariaDB, Oracle,
+            SQL Server, MongoDB, Redis). Building with -Dslim leaves out the Oracle, SQL Server, MongoDB
+            and Redis drivers and their dump strategies: the native image is far smaller and builds much
+            faster, and the API rejects jobs for the engines that are not built in.
+        -->
+        <profile>
+            <id>all-engines</id>
+            <activation>
+                <property>
+                    <name>!slim</name>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>com.oracle.database.jdbc</groupId>
+                    <artifactId>ojdbc11</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.microsoft.sqlserver</groupId>
+                    <artifactId>mssql-jdbc</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.mongodb</groupId>
+                    <artifactId>mongodb-driver-sync</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>redis.clients</groupId>
+                    <artifactId>jedis</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>slim</id>
+            <activation>
+                <property>
+                    <name>slim</name>
+                </property>
+            </activation>
+            <properties>
+                <!-- the engine tests need the drivers that this edition leaves out -->
+                <maven.test.skip>true</maven.test.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/adapter/output/db/OracleDumpStrategy.java</exclude>
+                                <exclude>**/adapter/output/db/MssqlDumpStrategy.java</exclude>
+                                <exclude>**/adapter/output/nosql/**</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>native</id>
             <build>
@@ -216,6 +259,14 @@
                         </executions>
                         <configuration>
                             <skipNativeTests>true</skipNativeTests>
+                            <buildArgs>
+                                <!-- keep the builder inside a ~10GB Docker VM: quick-build mode and fewer
+                                     analysis threads cut peak heap; GC pauses must not trip the watchdog -->
+                                <buildArg>-Ob</buildArg>
+                                <buildArg>--parallelism=4</buildArg>
+                                <buildArg>-J-Xmx8g</buildArg>
+                                <buildArg>-H:DeadlockWatchdogInterval=0</buildArg>
+                            </buildArgs>
                         </configuration>
                     </plugin>
                 </plugins>
